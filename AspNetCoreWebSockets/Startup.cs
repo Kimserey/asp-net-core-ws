@@ -46,6 +46,11 @@ namespace AspNetCoreWebSockets
                 app.UseDeveloperExceptionPage();
             }
 
+            app.UseCors(builder => builder
+                .AllowAnyHeader()
+                .AllowAnyOrigin()
+                .AllowAnyMethod());
+
             app.UseWebSockets();
             app.Use(async (context, next) =>
             {
