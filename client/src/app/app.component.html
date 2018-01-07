@@ -1,10 +1,14 @@
 <div>
-  Ws URL: {{wsUrl}}
-  <input type="text" name="data" [(ngModel)]="data" placeholder="Enter data" />
-  <button type="button" (click)="send()">Submit</button>
+  <div>
+    Web socket url: {{wsUrl}}
+  </div>
+  <form (ngSubmit)="send()">
+    <input type="text" name="data" [(ngModel)]="data" placeholder="Enter data" />
+    <button type="submit">Submit</button>
+  </form>
 </div>
 <div>
   <pre>
-    {{(messages$ | async)?.content}}
-    </pre>
+    <div *ngFor="let message of messages">{{message?.content}}</div>
+  </pre>
 </div>

@@ -3,6 +3,7 @@ import { environment } from '../environments/environment';
 import { MessageService } from './message';
 import { Message } from './model';
 import { Observable } from 'rxjs/Observable';
+import { Subscription } from 'rxjs/Subscription';
 
 @Component({
   selector: 'app-root',
@@ -12,13 +13,17 @@ import { Observable } from 'rxjs/Observable';
 export class AppComponent implements OnInit {
   title = 'app';
   wsUrl = environment.ws;
-  messages$: Observable<Message>;
+  messages: Message[] = [];
   data: string;
+  sub: Subscription;
 
   constructor(private messageService: MessageService) { }
 
   ngOnInit() {
-    this.messages$ = this.messageService.messages$;
+    this.sub = this.messageService.messages$
+      .subscribe(c => {
+        this.messages.push(c);
+      });
   }
 
   send() {

@@ -20,17 +20,19 @@ export class WebsocketService {
 
     const observable = Observable.create(
       (obs: Observer<MessageEvent>) => {
-        ws.onmessage = obs.next.bind(obs);
+        ws.onmessage = ev => {
+          obs.next(ev);
+        };
         ws.onerror = obs.error.bind(obs);
         ws.onclose = obs.complete.bind(obs);
         return ws.close.bind(ws);
       }
     );
 
-    const observer = {
-      next: (data: Object) => {
+    const observer = <Observer<MessageEvent>>{
+      next: (msg) => {
         if (ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify(data));
+          ws.send(msg);
         }
       }
     };
