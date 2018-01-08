@@ -1,3 +1,4 @@
+import 'rxjs/add/operator/do';
 import 'rxjs/add/operator/map';
 import { Injectable } from '@angular/core';
 import { Observable, Subject } from 'rxjs/Rx';
@@ -12,19 +13,11 @@ export class MessageService {
   constructor(private webSocketService: WebsocketService) {
     this.messages$ = webSocketService
       .connect(environment.ws)
-      .map((response: MessageEvent): Message => {
-        return {
-          content: response.data,
-          type: ''
-        };
-      });
+      .do(ev => console.log(ev))
+      .map(ev => ev.data);
   }
 
   send(content) {
-    this.webSocketService
-      .connect(environment.ws)
-      .next(<MessageEvent> {
-        data: content
-      });
+    this.webSocketService.send({ content, date: new Date() });
   }
 }

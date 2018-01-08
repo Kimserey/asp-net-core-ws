@@ -5,38 +5,35 @@ import { Observer } from 'rxjs/Observer';
 
 @Injectable()
 export class WebsocketService {
-  private subject: Subject<MessageEvent>;
+  observable: Observable<MessageEvent>;
+  private ws: WebSocket;
 
-  public connect(url): Subject<MessageEvent> {
-    if (!this.subject) {
-      this.subject = this.create(url);
+  connect(url): Observable<MessageEvent> {
+    if (!this.observable) {
+      this.observable = this.createObservable(url);
       console.log('Successfully connected: ' + url);
     }
-    return this.subject;
+    return this.observable;
   }
 
-  private create(url): Subject<MessageEvent> {
-    const ws = new WebSocket(url);
+  send(message) {
+    if (this.ws.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify(message));
+    }
+  }
 
-    const observable = Observable.create(
+  private createObservable(url): Subject<any> {
+    this.ws = new WebSocket(url);
+
+    return Observable.create(
       (obs: Observer<MessageEvent>) => {
-        ws.onmessage = ev => {
-          obs.next(ev);
+        this.ws.onmessage = ev => {
+          obs.next(Object.assign({}, ev, { data: JSON.parse(ev.data) }));
         };
-        ws.onerror = obs.error.bind(obs);
-        ws.onclose = obs.complete.bind(obs);
-        return ws.close.bind(ws);
+        this.ws.onerror = obs.error.bind(obs);
+        this.ws.onclose = obs.complete.bind(obs);
+        return this.ws.close.bind(this.ws);
       }
     );
-
-    const observer = <Observer<MessageEvent>>{
-      next: (msg) => {
-        if (ws.readyState === WebSocket.OPEN) {
-          ws.send(msg);
-        }
-      }
-    };
-
-    return Subject.create(observer, observable);
   }
 }
