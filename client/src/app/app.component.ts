@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { environment } from '../environments/environment';
 import { MessageService } from './message';
 import { Message } from './model';
@@ -10,23 +10,32 @@ import { Subscription } from 'rxjs/Subscription';
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent implements OnInit {
+export class AppComponent {
   title = 'app';
   wsUrl = environment.ws;
   messages: Message[] = [];
   data: string;
+  recipient: string;
+  username: string;
   sub: Subscription;
 
   constructor(private messageService: MessageService) { }
 
-  ngOnInit() {
-    this.sub = this.messageService.messages$
+  connect() {
+    this.messageService.connect(this.username);
+
+    if (!!this.sub) {
+      this.sub.unsubscribe();
+    }
+
+    this.sub = this.messageService
+      .messages$
       .subscribe(c => {
         this.messages.push(c);
       });
   }
 
   send() {
-    this.messageService.send(this.data);
+    this.messageService.send(this.recipient, this.data);
   }
 }

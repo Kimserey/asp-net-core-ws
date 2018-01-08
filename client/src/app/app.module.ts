@@ -1,6 +1,7 @@
 import { AppComponent } from './app.component';
 import { BrowserModule } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
+import { HttpClientModule } from '@angular/common/http';
 import { MessageService } from './message';
 import { NgModule } from '@angular/core';
 import { WebsocketService } from './websocket';
@@ -11,7 +12,8 @@ import { WebsocketService } from './websocket';
   ],
   imports: [
     BrowserModule,
-    FormsModule
+    FormsModule,
+    HttpClientModule
   ],
   providers: [
     MessageService,

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -16,10 +17,10 @@ namespace AspNetCoreWebSockets.Controllers
         }
 
         [HttpPost("{username}")]
-        public IActionResult Post(string username, [FromBody] Message message)
+        public IActionResult Post(string username, [FromBody] MessageViewModel message)
         {
-            _service.Send(username, message);
-            return Ok();
+            _service.Send(username, new Message { Content = message.Content, Date = DateTime.Now });
+            return Ok(new { });
         }
     }
 }

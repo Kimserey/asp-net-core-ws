@@ -8,9 +8,9 @@ export class WebsocketService {
   observable: Observable<MessageEvent>;
   private ws: WebSocket;
 
-  connect(url): Observable<MessageEvent> {
+  connect(username, url): Observable<MessageEvent> {
     if (!this.observable) {
-      this.observable = this.createObservable(url);
+      this.observable = this.createObservable(username, url);
       console.log('Successfully connected: ' + url);
     }
     return this.observable;
@@ -22,8 +22,8 @@ export class WebsocketService {
     }
   }
 
-  private createObservable(url): Subject<any> {
-    this.ws = new WebSocket(url);
+  private createObservable(username, url): Subject<any> {
+    this.ws = new WebSocket(`${url}?username=${username}`);
 
     return Observable.create(
       (obs: Observer<MessageEvent>) => {

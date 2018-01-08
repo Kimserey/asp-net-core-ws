@@ -1,9 +1,14 @@
 <div>
   <div>
     Web socket url: {{wsUrl}}
+    <form (ngSubmit)="connect()">
+    <input type="text" name="username" [(ngModel)]="username" placeholder="Username" />
+    <button>Connect as {{username}}</button>
+  </form>
   </div>
   <form (ngSubmit)="send()">
-    <input type="text" name="data" [(ngModel)]="data" placeholder="Enter data" />
+    <input type="text" name="recipient" [(ngModel)]="recipient" placeholder="Recipient" />
+    <input type="text" name="data" [(ngModel)]="data" placeholder="Type a message" />
     <button type="submit">Submit</button>
   </form>
 </div>

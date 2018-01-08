@@ -73,7 +73,7 @@ namespace AspNetCoreWebSockets
             WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
 
             var subscription = service.Channel
-                .Where(c => c.Item1 == context.Request.Headers["username"])
+                .Where(c => c.Item1 == context.Request.Query["username"])
                 .Select(c => c.Item2)
                 .Subscribe(async data =>
             {
