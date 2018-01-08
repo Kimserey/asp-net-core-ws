@@ -4,18 +4,11 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Reactive;
-using System.Collections.Concurrent;
-using System.Linq;
 using System.Net.WebSockets;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Reactive.Threading.Tasks;
-using System.Reactive.Subjects;
-using System.IO;
-using System.Collections.Generic;
-using System.Text;
-using System.Reactive.Linq;
 
 namespace AspNetCoreWebSockets
 {
@@ -23,8 +16,6 @@ namespace AspNetCoreWebSockets
     {
         // Default buffer size 4KB = 2^10 * 4
         const int DefaultBufferSize = 1024 * 4;
-
-        static Subject<(byte[], WebSocketReceiveResult)> _channel = new Subject<(byte[], WebSocketReceiveResult)>();
 
         public Startup(IConfiguration configuration)
         {
@@ -36,7 +27,7 @@ namespace AspNetCoreWebSockets
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
-
+            services.AddSingleton<IWebSocketService, WebSocketService>();
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
@@ -58,7 +49,9 @@ namespace AspNetCoreWebSockets
                 {
                     if (context.WebSockets.IsWebSocketRequest)
                     {
-                        await StartWebSocketConnection(context);
+                        await StartWebSocketConnection(
+                            context, 
+                            app.ApplicationServices.GetRequiredService<IWebSocketService>());
                     }
                     else
                     {
@@ -75,12 +68,19 @@ namespace AspNetCoreWebSockets
             app.UseMvc();
         }
 
-        private async Task StartWebSocketConnection(HttpContext context)
+        private async Task StartWebSocketConnection(HttpContext context, IWebSocketService service)
         {
             WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
-            var subscription = _channel.Subscribe(async data =>
+
+            var subscription = service.Channel
+                .Where(c => c.Item1 == context.Request.Headers["username"])
+                .Select(c => c.Item2)
+                .Subscribe(async data =>
             {
-                await webSocket.SendAsync(new ArraySegment<byte>(data.Item1, 0, data.Item2.Count), data.Item2.MessageType, data.Item2.EndOfMessage, CancellationToken.None);
+                await webSocket.SendAsync(new ArraySegment<byte>(data, 0, data.Length), 
+                    WebSocketMessageType.Text, 
+                    true, 
+                    CancellationToken.None);
             });
 
             var buffer = new byte[DefaultBufferSize];
@@ -88,7 +88,7 @@ namespace AspNetCoreWebSockets
 
             while (!result.CloseStatus.HasValue)
             {
-                _channel.OnNext((buffer.Take(result.Count).ToArray(), result));
+                // The only expected message coming from a WebSocket connection is a closure message
                 result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
             }
 
